@@ -38,7 +38,9 @@ const elements = {
     pValue: document.getElementById('p-value'),
     gValue: document.getElementById('g-value'),
     mitmToggle: document.getElementById('mitm-enabled'),
+    mitmWarning: document.getElementById('mitm-warning'),
     startButton: document.getElementById('start-protocol'),
+    resetButton: document.getElementById('reset-simulation'),
 
     // Participants
     aliceSecret: document.getElementById('alice-secret'),
@@ -491,6 +493,23 @@ function addChatMessage(participant, message, sent) {
 // ============================================
 
 elements.mitmToggle.addEventListener('change', (e) => {
+    // Check if protocol has already started
+    if (state.protocolStarted && !state.mitmEnabled) {
+        // If trying to enable MITM after protocol started without it
+        e.preventDefault();
+        e.target.checked = false; // Revert toggle
+
+        // Show warning popup
+        elements.mitmWarning.style.display = 'block';
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+            elements.mitmWarning.style.display = 'none';
+        }, 3000);
+
+        return;
+    }
+
     state.mitmEnabled = e.target.checked;
 
     if (state.mitmEnabled) {
@@ -501,6 +520,77 @@ elements.mitmToggle.addEventListener('change', (e) => {
         addLog('Modo MITM desactivado - Comunicación directa', 'info');
     }
 });
+
+elements.resetButton.addEventListener('click', resetSimulation);
+
+function resetSimulation() {
+    // Reset state
+    state.protocolStarted = false;
+    state.chatEnabled = false;
+    state.pendingIntercept = null;
+
+    // Reset participant states (keep secrets if desired, but let's clear calculated values)
+    state.alice.publicValue = null;
+    state.alice.sharedKey = null;
+    state.bob.publicValue = null;
+    state.bob.sharedKey = null;
+    state.mallory.publicValue = null;
+    state.mallory.aliceKey = null;
+    state.mallory.bobKey = null;
+
+    // Reset UI inputs (enable them)
+    elements.aliceSecret.disabled = false;
+    elements.bobSecret.disabled = false;
+    elements.mallorySecret.disabled = false;
+    elements.pValue.disabled = false;
+    elements.gValue.disabled = false;
+    elements.mitmToggle.disabled = false;
+    elements.startButton.disabled = false;
+
+    // Reset Chat UI
+    elements.aliceInput.disabled = true;
+    elements.aliceSend.disabled = true;
+    elements.bobInput.disabled = true;
+    elements.bobSend.disabled = true;
+
+    // Clear displays
+    elements.alicePublic.textContent = '-';
+    elements.aliceShared.textContent = '-';
+    elements.bobPublic.textContent = '-';
+    elements.bobShared.textContent = '-';
+    elements.malloryPublic.textContent = '-';
+    elements.malloryAliceKey.textContent = '-';
+    elements.malloryBobKey.textContent = '-';
+
+    // Clear exchange flow and chat messages
+    elements.exchangeFlow.innerHTML = '';
+    elements.aliceMessages.innerHTML = '';
+    elements.bobMessages.innerHTML = '';
+    elements.interceptMessages.innerHTML = '';
+
+    // Reset status indicators
+    updateStatus('alice', 'Esperando...');
+    updateStatus('bob', 'Esperando...');
+    updateStatus('mallory', 'Inactivo');
+
+    // Hide Mallory intercept panel if it was shown
+    if (!state.mitmEnabled) {
+        elements.malloryIntercept.style.display = 'block'; // Reset to default layout (grid handles visibility)
+        // Actually, in enableChat we hide it if !mitmEnabled. 
+        // But here we just want to reset to initial state.
+        // Initial state has it visible in DOM but empty.
+    }
+    // Ensure Mallory section respects current toggle state
+    if (!state.mitmEnabled) {
+        elements.mallorySection.classList.add('disabled');
+    } else {
+        elements.mallorySection.classList.remove('disabled');
+    }
+
+    addLog('='.repeat(60), 'info');
+    addLog('SIMULACIÓN REINICIADA', 'info');
+    addLog('='.repeat(60), 'info');
+}
 
 elements.startButton.addEventListener('click', startProtocol);
 

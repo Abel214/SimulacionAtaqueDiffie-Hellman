@@ -44,9 +44,15 @@
                     <span class="mitm-icon">!</span>
                     Activar Ataque MITM
                 </label>
+                <div class="mitm-warning-popup" id="mitm-warning">
+                    No se puede activar MITM: Las claves ya se establecieron. Reinicia la simulación.
+                </div>
             </div>
 
-            <button id="start-protocol" class="btn-primary">Iniciar Protocolo</button>
+            <div class="button-group">
+                <button id="start-protocol" class="btn-primary">Iniciar Protocolo</button>
+                <button id="reset-simulation" class="btn-secondary">Reiniciar</button>
+            </div>
         </div>
 
         <!-- Participants Section -->
