@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación Diffie-Hellman con Ataque MITM</title>
+    <meta name="description"
+        content="Demostración interactiva del protocolo Diffie-Hellman y su vulnerabilidad ante ataques Man-in-the-Middle">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Simulación Diffie-Hellman</h1>
+            <p class="subtitle">Demostración del ataque Man-in-the-Middle</p>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="parameters-section">
+                <h2>Parámetros Públicos</h2>
+                <div class="param-group">
+                    <label for="p-value">Primo (p):</label>
+                    <input type="number" id="p-value" value="23" min="2">
+                </div>
+                <div class="param-group">
+                    <label for="g-value">Generador (g):</label>
+                    <input type="number" id="g-value" value="5" min="2">
+                </div>
+            </div>
+
+            <div class="mitm-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="mitm-enabled">
+                    <span class="slider"></span>
+                </label>
+                <label for="mitm-enabled" class="mitm-label">
+                    <span class="mitm-icon">!</span>
+                    Activar Ataque MITM
+                </label>
+            </div>
+
+            <button id="start-protocol" class="btn-primary">Iniciar Protocolo</button>
+        </div>
+
+        <!-- Participants Section -->
+        <div class="participants-grid">
+            <!-- Alice -->
+            <div class="participant alice-card" id="alice-section">
+                <div class="participant-header">
+                    <div class="avatar alice-avatar">A</div>
+                    <h2>Alice</h2>
+                </div>
+                <div class="participant-body">
+                    <div class="secret-input">
+                        <label for="alice-secret">Secreto Privado (a):</label>
+                        <input type="number" id="alice-secret" min="3" max="10" placeholder="3-10">
+                    </div>
+                    <div class="calculation-display">
+                        <div class="calc-item">
+                            <span class="calc-label">Valor Público (A):</span>
+                            <span class="calc-value" id="alice-public">-</span>
+                        </div>
+                        <div class="calc-item">
+                            <span class="calc-label">Clave Compartida:</span>
+                            <span class="calc-value" id="alice-shared">-</span>
+                        </div>
+                    </div>
+                    <div class="status-indicator" id="alice-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Esperando...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mallory (MITM) -->
+            <div class="participant mallory-card" id="mallory-section">
+                <div class="participant-header">
+                    <div class="avatar mallory-avatar">M</div>
+                    <h2>Mallory</h2>
+                    <span class="badge-mitm">MITM</span>
+                </div>
+                <div class="participant-body">
+                    <div class="secret-input">
+                        <label for="mallory-secret">Secreto Privado (m):</label>
+                        <input type="number" id="mallory-secret" min="3" max="10" placeholder="3-10">
+                    </div>
+                    <div class="calculation-display">
+                        <div class="calc-item">
+                            <span class="calc-label">Valor Público (M):</span>
+                            <span class="calc-value" id="mallory-public">-</span>
+                        </div>
+                        <div class="calc-item">
+                            <span class="calc-label">Clave con Alice:</span>
+                            <span class="calc-value" id="mallory-alice-key">-</span>
+                        </div>
+                        <div class="calc-item">
+                            <span class="calc-label">Clave con Bob:</span>
+                            <span class="calc-value" id="mallory-bob-key">-</span>
+                        </div>
+                    </div>
+                    <div class="status-indicator" id="mallory-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Inactivo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bob -->
+            <div class="participant bob-card" id="bob-section">
+                <div class="participant-header">
+                    <div class="avatar bob-avatar">B</div>
+                    <h2>Bob</h2>
+                </div>
+                <div class="participant-body">
+                    <div class="secret-input">
+                        <label for="bob-secret">Secreto Privado (b):</label>
+                        <input type="number" id="bob-secret" min="3" max="10" placeholder="3-10">
+                    </div>
+                    <div class="calculation-display">
+                        <div class="calc-item">
+                            <span class="calc-label">Valor Público (B):</span>
+                            <span class="calc-value" id="bob-public">-</span>
+                        </div>
+                        <div class="calc-item">
+                            <span class="calc-label">Clave Compartida:</span>
+                            <span class="calc-value" id="bob-shared">-</span>
+                        </div>
+                    </div>
+                    <div class="status-indicator" id="bob-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Esperando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exchange Visualization -->
+        <div class="exchange-section" id="exchange-section">
+            <h2>Intercambio de Claves</h2>
+            <div class="exchange-flow" id="exchange-flow">
+                <!-- Dynamic exchange steps will be added here -->
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="chat-section" id="chat-section">
+            <h2>Mensajería Cifrada</h2>
+
+            <div class="chat-grid">
+                <!-- Alice Chat -->
+                <div class="chat-panel alice-chat">
+                    <div class="chat-header">
+                        <div class="avatar-small alice-avatar">A</div>
+                        <h3>Alice</h3>
+                    </div>
+                    <div class="chat-messages" id="alice-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="alice-input" placeholder="Escribe un mensaje..." disabled>
+                        <button id="alice-send" class="btn-send" disabled>Enviar</button>
+                    </div>
+                </div>
+
+                <!-- Mallory Intercept Panel -->
+                <div class="chat-panel mallory-intercept" id="mallory-intercept">
+                    <div class="chat-header">
+                        <div class="avatar-small mallory-avatar">M</div>
+                        <h3>Mallory - Interceptación</h3>
+                    </div>
+                    <div class="intercept-messages" id="intercept-messages"></div>
+                </div>
+
+                <!-- Bob Chat -->
+                <div class="chat-panel bob-chat">
+                    <div class="chat-header">
+                        <div class="avatar-small bob-avatar">B</div>
+                        <h3>Bob</h3>
+                    </div>
+                    <div class="chat-messages" id="bob-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="bob-input" placeholder="Escribe un mensaje..." disabled>
+                        <button id="bob-send" class="btn-send" disabled>Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="log-section">
+            <div class="log-header">
+                <h2>Registro de Eventos</h2>
+                <button id="clear-log" class="btn-secondary">Limpiar</button>
+            </div>
+            <div class="log-content" id="log-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
